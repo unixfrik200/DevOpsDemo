@@ -14,7 +14,7 @@ aws cloudformation create-stack --stack-name DevOpsDemo-dev-PublicInstance --tem
 aws cloudformation create-stack --stack-name DevOpsDemo-dev-PrivateInstance --template-body file://Private-Subnet1-EC2-instance-CFT.json --parameters file://Private-Subnet1-EC2-instance-Parameters.json
 ```
 4) setup login details for Jenkins , You can find jenkinURL from output of Publicinstance stack
-5) Keep Key of PrivateInstabce to run ssh/ansible playbook in /etc/ansible
+5) Keep ssh Key of PrivateInstabce in /etc/ansible to run ansible-playbook
 6) configure inventroy file on PublicInstance in /etc/ansible ( you can find IP of PrivateInstance from Privateinstance stack)
 ```
    #cd /etc/ansible
