@@ -25,7 +25,7 @@ aws cloudformation create-stack --stack-name DevOpsDemo-dev-PrivateInstance --te
         [privateinstance]
         10.10.0.149 ansible_ssh_user=ubuntu ansible_ssh_private_key_file=EC2-test.pem
  ```
- B) Check Private machine reachablity from Publicmachin using ansible
+ B) Check PrivateInstance machine reachablity from PublicInstance using ansible
  ```
      #ansible -m ping privateinstance
  ```
