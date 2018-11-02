@@ -1,4 +1,6 @@
 # This Doc to How to create infra and automation with basic steps
+
+
 1) Create VPC and Subnet
 ```
 aws cloudformation create-stack --stack-name DevOpsDemo-dev-vpc --template-body file://DevOpsDemo-VPC.json --parameters file://DevOpsDemo-VPC-Parameters.json
