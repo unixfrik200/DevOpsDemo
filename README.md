@@ -1,4 +1,4 @@
-# create infra with CFT and example of do automation with basic steps
+# Create infra with CFT and example of do automation with basic steps
 
 
 1) Create VPC and Subnet
