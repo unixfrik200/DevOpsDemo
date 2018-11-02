@@ -32,6 +32,10 @@ aws cloudformation create-stack --stack-name DevOpsDemo-dev-PrivateInstance --te
 
 7) Now Create Job in Jenkin server to create Dockerfile and keep it in /mnt/artefact
     copy Build steps from file Jenikins-Job-Shell for Execustion-Shell build step
+    ```
+    #cat jenkins/Jenikins-Job-Shell
+    ```
+    
 
 8) run ansible-playbook from PublicInstance 
 ```
