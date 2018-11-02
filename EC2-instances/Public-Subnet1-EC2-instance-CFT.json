@@ -1,0 +1,207 @@
+{
+   "AWSTemplateFormatVersion":"2010-09-09",
+   "Description":"This CFT deploys Ec2 instance in PublicSubnet1 for Jenkins and Ansible",
+   "Parameters":{
+      "Account":{
+         "Description":"AWS Account Type where this CFT will be deployed",
+         "Default":"dev",
+         "Type":"String",
+         "AllowedValues":[
+            "dev",
+            "preprod",
+            "prod"
+         ]
+      },
+      "VpcId":{
+         "Description":"Provide VPC resource ID ",
+         "Type":"String"
+      },
+      "PublicSubnetId":{
+         "Description":"Provide Public Subnet ID ",
+         "Type":"String"
+      },
+      "VpcName": {
+         "Description": "Prefix VPC resource names for easy identification",
+         "Type": "String"
+      },
+      "InstanceType":{
+         "Description":"App EC2 instance type",
+         "Type":"String",
+         "Default":"t2.micro"
+      },
+      "KeyName":{
+         "Description":"The EC2 Key Pair to allow SSH access to the instances",
+         "Type":"AWS::EC2::KeyPair::KeyName",
+         "ConstraintDescription":"must be the name of an existing EC2 KeyPair."
+      },
+      "AmiId":{
+         "Description":"Ami to launch ec2 instances",
+         "Type":"String"
+      }
+   },
+   "Resources":{
+      "PublicInstanceSG":{
+         "Type":"AWS::EC2::SecurityGroup",
+         "Properties":{
+            "GroupDescription":"Public Subnet EC2 instances",
+            "VpcId":{
+               "Ref" : "VpcId"
+            },
+            "SecurityGroupIngress":[
+               {
+                  "IpProtocol":"tcp",
+                  "FromPort":"22",
+                  "ToPort":"22",
+                  "CidrIp":"0.0.0.0/0"
+               },
+               {
+                  "IpProtocol":"tcp",
+                  "FromPort":"8080",
+                  "ToPort":"8080",
+                  "CidrIp":"0.0.0.0/0"
+               }
+            ],
+            "Tags":[
+               {
+                  "Key":"Name",
+                  "Value":{
+                     "Fn::Join":[
+                        ":",
+                        [
+                           {
+                              "Ref":"VpcName"
+                           },
+                           {
+                              "Ref":"Account"
+                           },
+                           "PublicInstanceSG"
+                        ]
+                     ]
+                  }
+               }
+            ]
+         }
+      },
+      "PublicInstance":{
+         "Type":"AWS::EC2::Instance",
+         "Properties":{
+            "ImageId":{
+               "Ref":"AmiId"
+            },
+            "KeyName":{
+               "Ref":"KeyName"
+            },
+            "InstanceType":{
+               "Ref":"InstanceType"
+            },
+            "NetworkInterfaces": [
+                    {
+                        "AssociatePublicIpAddress": "true",
+                        "DeviceIndex": "0",
+                        "GroupSet": [
+                            {
+                                "Fn::GetAtt":[
+                                "PublicInstanceSG",
+                                 "GroupId"
+                               ]
+
+                            }
+                        ],
+                        "SubnetId": {
+                            "Ref": "PublicSubnetId"
+                        }
+                    }
+                ],
+           "UserData":{
+              "Fn::Base64":{
+                 "Fn::Join":[
+                    "",
+                     [
+                        "#!/bin/bash -xe\n",
+                        "sudo sed -i '1s/^/127.0.0.1 '`hostname`'\\n/' /etc/hosts \n",
+                        "echo 'Jenkins installation is Started' \n",
+                        "sudo apt-get update -y -qq \n",
+                        "sudo apt-get install python-software-properties -y \n",
+                        "sudo add-apt-repository ppa:webupd8team/java -y \n",
+                        "sudo apt-get update -y \n",
+                        "echo 'oracle-java8-installer shared/accepted-oracle-license-v1-1 select true' | sudo debconf-set-selections \n",
+                        "sudo apt-get install -y oracle-java8-installer \n",
+                        "wget -q -O - https://pkg.jenkins.io/debian/jenkins-ci.org.key |sudo  apt-key add - \n",
+                        "sudo echo 'deb http://pkg.jenkins-ci.org/debian binary/' > /tmp/jenkins.list \n",
+                        "sudo cp /tmp/jenkins.list /etc/apt/sources.list.d/jenkins.list \n",
+                        "sudo apt-get update -y \n",
+                        "sudo apt-get install jenkins -y \n",
+                        "echo 'Jenkin installation is Done' \n",
+                        "echo 'install Ansible' \n",
+                        "sudo apt-get install software-properties-common -y \n",
+                        "sudo apt-add-repository --yes  ppa:ansible/ansible \n",
+                        "sudo apt-get update -y \n",
+                        "sudo apt-get install ansible -y \n",
+                        "sudo sed -i 's/#host_key_checking/host_key_checking/g' /etc/ansible/ansible.cfg \n",
+                        "sudo mkdir /mnt/artefact \n",
+                        "sudo chown -R jenkins:jenkins /mnt/artefact \n"
+                     ]
+                 ]
+               }
+           },
+           "Tags":[
+               {
+                  "Key":"Name",
+                  "Value":{
+                     "Fn::Join":[
+                        ":",
+                        [
+                           {
+                              "Ref":"VpcName"
+                           },
+                           {
+                              "Ref":"Account"
+                           },
+                           "PublicInstance"
+                        ]
+                     ]
+                  }
+               }
+            ]
+         }
+      }
+   },
+   "Outputs":{
+      "PublicInstanceSG":{
+         "Description":"Security Group ID for instances",
+         "Value":{
+            "Fn::GetAtt":[
+               "PublicInstanceSG",
+               "GroupId"
+            ]
+         }
+      },
+      "jenkinUrl":{
+         "Description":"Jenkin URL",
+         "Value":{
+            "Fn::Join":[
+               "",
+               [
+                  "http://",
+                  {
+                     "Fn::GetAtt":[
+                        "PublicInstance",
+                        "PublicIp"
+                     ]
+                  },
+                  ":8080"
+               ]
+            ]
+         }
+      },
+      "PublicIP":{
+         "Description":"Public IP address of instance",
+         "Value":{
+            "Fn::GetAtt":[
+               "PublicInstance",
+               "PublicIp"
+            ]
+         }
+      }
+   }
+}

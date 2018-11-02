@@ -1,0 +1,19 @@
+#!/bin/bash
+
+if [[ ! -e /mnt/artefact ]]
+then
+ sudo mkdir /mnt/artefact
+fi
+
+echo "# Pull base image." > Dockerfile
+echo "FROM ubuntu:14.04" >> Dockerfile
+echo "# Update Base image" >> Dockerfile
+echo "RUN apt-get update -y" >> Dockerfile
+echo "RUN apt-get install -y curl wget" >> Dockerfile
+echo "# Set environment variables." >> Dockerfile
+echo "ENV HOME /root" >> Dockerfile
+echo "WORKDIR /root" >> Dockerfile
+echo 'CMD ["bash"]' >> Dockerfile
+
+echo "Copy Dockerfile in /mnt/artefact"
+cp Dockerfile /mnt/artefact/

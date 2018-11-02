@@ -1,0 +1,163 @@
+{
+   "AWSTemplateFormatVersion":"2010-09-09",
+   "Description":"This CFT deploys Ec2 instance in PublicSubnet1 for Jenkins and Ansible",
+   "Parameters":{
+      "Account":{
+         "Description":"AWS Account Type where this CFT will be deployed",
+         "Default":"dev",
+         "Type":"String",
+         "AllowedValues":[
+            "dev",
+            "preprod",
+            "prod"
+         ]
+      },
+      "VpcId":{
+         "Description":"Provide VPC resource ID ",
+         "Type":"String"
+      },
+      "PrivateSubnetId":{
+         "Description":"Provide Public Subnet ID ",
+         "Type":"String"
+      },
+      "VpcName": {
+         "Description": "Prefix VPC resource names for easy identification",
+         "Type": "String"
+      },
+      "InstanceType":{
+         "Description":"App EC2 instance type",
+         "Type":"String",
+         "Default":"t2.micro"
+      },
+      "KeyName":{
+         "Description":"The EC2 Key Pair to allow SSH access to the instances",
+         "Type":"AWS::EC2::KeyPair::KeyName",
+         "ConstraintDescription":"must be the name of an existing EC2 KeyPair."
+      },
+      "AmiId":{
+         "Description":"Ami to launch ec2 instances",
+         "Type":"String"
+      }
+   },
+   "Mappings": {
+      "dev" : { "SubnetConfig": { "VPC": "10.10.0.0/24" }},
+      "preprod" : { "SubnetConfig": { "VPC": "10.10.16.0/24" }},
+      "prod": { "SubnetConfig": { "VPC": "10.10.32.0/24" }}
+   },
+   "Resources":{
+      "PrivateInstanceSG":{
+         "Type":"AWS::EC2::SecurityGroup",
+         "Properties":{
+            "GroupDescription":"Private Subnet EC2 instances",
+            "VpcId":{
+               "Ref" : "VpcId"
+            },
+            "SecurityGroupIngress":[
+               {
+                  "IpProtocol":"tcp",
+                  "FromPort":"22",
+                  "ToPort":"22",
+                  "CidrIp": {
+                     "Fn::FindInMap": [
+                        { "Ref": "Account" },
+                           "SubnetConfig",
+                           "VPC"
+                     ]
+                  }
+               }
+            ],
+            "Tags":[
+               {
+                  "Key":"Name",
+                  "Value":{
+                     "Fn::Join":[
+                        ":",
+                        [
+                           {
+                              "Ref":"VpcName"
+                           },
+                           {
+                              "Ref":"Account"
+                           },
+                           "PrivateInstanceSG"
+                        ]
+                     ]
+                  }
+               }
+            ]
+         }
+      },
+      "PrivateInstance":{
+         "Type":"AWS::EC2::Instance",
+         "Properties":{
+            "ImageId":{
+               "Ref":"AmiId"
+            },
+            "KeyName":{
+               "Ref":"KeyName"
+            },
+            
+            "InstanceType":{
+               "Ref":"InstanceType"
+            },
+            "NetworkInterfaces": [
+                    {
+                        "AssociatePublicIpAddress": "false",
+                        "DeviceIndex": "0",
+                        "GroupSet": [
+                            {
+                                "Fn::GetAtt":[
+                                "PrivateInstanceSG",
+                                 "GroupId"
+                               ]
+
+                            }
+                        ],
+                        "SubnetId": {
+                            "Ref": "PrivateSubnetId"
+                        }
+                    }
+            ],
+            "Tags":[
+               {
+                  "Key":"Name",
+                  "Value":{
+                     "Fn::Join":[
+                        ":",
+                        [
+                           {
+                              "Ref":"VpcName"
+                           },
+                           {
+                              "Ref":"Account"
+                           },
+                           "PrivateInstance"
+                        ]
+                     ]
+                  }
+               }
+            ]
+         }
+      }
+   },
+   "Outputs":{
+      "PrivateInstanceSG":{
+         "Description":"Security Group ID for instances",
+         "Value":{
+            "Fn::GetAtt":[
+               "PrivateInstanceSG",
+               "GroupId"
+            ]
+         }
+      },
+      "PrivateIP":{
+         "Description":"Private IP address of instance",
+         "Value":{
+            "Fn::GetAtt":[
+               "PrivateInstance",
+               "PrivateIp"
+            ]
+         }
+      }
+   }
+}

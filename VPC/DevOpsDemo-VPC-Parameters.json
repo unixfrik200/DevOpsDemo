@@ -1,0 +1,14 @@
+[
+  {
+    "ParameterKey": "Account",
+    "ParameterValue": "dev"
+  },
+  {
+    "ParameterKey": "VpcName",
+    "ParameterValue": "DevOpsDemo"
+  },
+  {
+    "ParameterKey": "TemplateVersion",
+    "ParameterValue": "1.0.0"
+  }
+]
