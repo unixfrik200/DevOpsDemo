@@ -8,19 +8,15 @@
     "ParameterValue": "DevOpsDemo"
   },
   {
-    "ParameterKey": "VpcId",
-    "ParameterValue": "vpc-0569f10d51e605a5f"
+    "ParameterKey": "KeyName",
+    "ParameterValue": "EC2-test"
   },
   {
-    "ParameterKey": "PrivateSubnetId",
-    "ParameterValue": "subnet-0185ea88328a2a792"
+    "ParameterKey": "InstanceType",
+    "ParameterValue": "t2.micro"
   },
   {
     "ParameterKey": "AmiId",
     "ParameterValue": "ami-09bfeda7337019518"
-  },
-  {
-    "ParameterKey": "KeyName",
-    "ParameterValue": "EC2-test"
   }
 ]
